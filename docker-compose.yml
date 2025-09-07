@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: myuser
+      RABBITMQ_DEFAULT_PASS: mypass123!
+      RABBITMQ_DEFAULT_VHOST: myvhost
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  # Build the small Node image once and reuse
+  consumer1:
+    build: .
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBIT_URL: amqp://myuser:mypass123!@rabbitmq:5672/myvhost
+      QUEUE: demo.batch.queue
+      BATCH_SIZE: "5000"
+      BATCH_TIMEOUT: "2000"
+      SIMULATE_MS: "500"
+      
+    command: ["node", "/app/consumer.js"]
+    restart: unless-stopped
+
+  consumer2:
+    extends:
+      service: consumer1
+    container_name: consumer2
+
+  consumer3:
+    extends:
+      service: consumer1
+    container_name: consumer3
+
+  # One-shot publisher; run when you want to seed messages
+  publisher:
+    build: .
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBIT_URL: amqp://myuser:mypass123!@rabbitmq:5672/myvhost
+      QUEUE: demo.batch.queue
+      COUNT: "100000"     # change as needed
+      CORRUPT_EVERY: "10"
+      BATCH_SIZE: "100"
+    command: ["node", "/app/publisher.js"]
+    restart: "no"
+
+volumes:
+  rabbitmq-data:
