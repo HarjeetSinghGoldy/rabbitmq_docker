@@ -76,7 +76,7 @@ async function ensureTopology(ch) {
 }
 
 // -------- STARTUP --------
-(async () => {
+( () => {
     conn = await amqp.connect(URL);
     conn.on("close", () => {
         console.error("[CONNECTION] closed – exiting for restart");
@@ -185,3 +185,4 @@ async function handleFailure(msg) {
         }
     })
 );
+

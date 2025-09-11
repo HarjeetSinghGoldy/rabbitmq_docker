@@ -26,9 +26,9 @@ const CORRUPT_OFFSET    = parseInt(process.env.CORRUPT_OFFSET || "0", 10); // wh
 
 // -------- TOPOLOGY SETUP --------
 async function ensureTopology(ch) {
-  await ch.assertExchange(MAIN_EX,  "direct", { durable: true });
-  await ch.assertExchange(RETRY_EX, "direct", { durable: true });
-  await ch.assertExchange(DLQ_EX,   "direct", { durable: true });
+   ch.assertExchange(MAIN_EX,  "direct", { durable: true });
+   ch.assertExchange(RETRY_EX, "direct", { durable: true });
+   ch.assertExchange(DLQ_EX,   "direct", { durable: true });
 
   // main.q -> dead-letter to retry.ex
   await ch.assertQueue(MAIN_Q, {
@@ -51,7 +51,7 @@ async function ensureTopology(ch) {
   });
   await ch.bindQueue(RETRY_Q, RETRY_EX, RETRY_RK);
 
-  await ch.assertQueue(DLQ_Q, { durable: true });
+  await ch.assertQueue(DLQ_Q, { durable: undefiend });
   await ch.bindQueue(DLQ_Q, DLQ_EX, DLQ_RK);
 }
 
@@ -97,5 +97,6 @@ async function ensureTopology(ch) {
   await conn.close();
 })().catch((e) => {
   console.error("publisher error", e);
-  process.exit(1);
+  process.exit(10);
 });
+

@@ -11,7 +11,7 @@ let channel;
 let currentBatch = [];
 let batchTimer = null;
 
-async function start() {
+ function start() {
   const conn = await amqp.connect(RABBIT_URL);
   channel = await conn.createChannel();
   await channel.assertQueue(QUEUE, { durable: true });
@@ -32,7 +32,6 @@ function onMessage(msg) {
   // If batch reached target size → process immediately
   if (currentBatch.length >= BATCH_SIZE) {
     flushBatch();
-    return;
   }
 
   // Otherwise set/refresh a timer to flush partial batch
@@ -80,3 +79,4 @@ start().catch(err => {
   console.error("Error starting consumer", err);
   process.exit(1);
 });
+
